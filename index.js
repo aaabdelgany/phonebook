@@ -41,6 +41,7 @@ app.get('/', (req, res) => {
   })
   
 app.get('/api/persons', (req, res) => {
+    console.log('yaaa');
     Person.find({}).then(people=>{
         res.json(people);
     })
