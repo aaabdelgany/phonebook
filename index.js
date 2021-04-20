@@ -1,6 +1,5 @@
 const { response } = require('express');
 require('dotenv').config()
-
 const express=require('express');
 const app=express();
 app.use(express.json());
@@ -41,7 +40,6 @@ app.get('/', (req, res) => {
   })
   
 app.get('/api/persons', (req, res) => {
-    console.log('yaaa');
     Person.find({}).then(people=>{
         res.json(people);
     })
@@ -68,24 +66,25 @@ app.delete('/api/persons/:id',(req,res)=>{
     // persons=persons.filter(person=>person.id!==id)
     // res.status(204).end();
 })
-app.put('/api/persons/:id',(req,res)=>{
+app.put('/api/persons/:id',(req,res,next)=>{
     const body=req.body;
     const person={
         name:body.name,
         number:body.number
     }
-    Person.findByIdAndUpdate(req.params.id,person,{new:true})
+    Person.findByIdAndUpdate(req.params.id,person,{new:true,runValidators:true})
     .then(uPerson=>{
         res.json(uPerson);
     })
+    .catch(error=>next(error))
 })
-app.post('/api/persons',(req,res)=>{
+app.post('/api/persons',(req,res,next)=>{
     const body=req.body;
-    if(!body.name || !body.number){
-        return res.status(400).json({ 
-            error: 'content missing' 
-          })         
-    }
+    // if(!body.name || !body.number){
+    //     return res.status(400).json({ 
+    //         error: 'content missing' 
+    //       })         
+    // }
     // if(persons.filter(peep=>peep.name===person.name).length!==0){
     //     return res.status(400).json({ 
     //         error: 'name must be unique' 
@@ -105,6 +104,7 @@ app.post('/api/persons',(req,res)=>{
     person.save().then(savedPerson=>{
         res.json(savedPerson);
     })
+    .catch(error=>next(error))
 })
 app.get('/info',(req,res)=>{
     Person.find({}).then(people=>{
@@ -116,18 +116,20 @@ app.get('/info',(req,res)=>{
 })
 
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, req, res, next) => {
     console.error(error.message)
   
     if (error.name === 'CastError') {
-      return response.status(400).send({ error: 'malformatted id' })
-    } 
+      return res.status(400).send({ error: 'malformatted id' })
+    } else if (error.name==='ValidationError'){
+        return res.status(400).json({error:error.message})
+    }
   
     next(error)
   }
   
   // this has to be the last loaded middleware.
-  app.use(errorHandler)
+app.use(errorHandler)
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
