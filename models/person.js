@@ -1,3 +1,5 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-param-reassign */
 const mongoose = require('mongoose');
 // const pw=process.argv[2];
 const uniqueValidator = require('mongoose-unique-validator');
